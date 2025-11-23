@@ -112,12 +112,7 @@ Follow these steps to set up and run the application on a new laptop or environm
    - Copy the entire project folder to your new laptop
    - Or clone from repository if using version control
 
-2. **Open terminal/PowerShell** in the project folder:
-   ```bash
-   cd "path\to\StarEventsTicketing"
-   ```
-
-3. **Restore NuGet packages:**
+2. **Restore NuGet packages:**
    ```bash
    dotnet restore
    ```
