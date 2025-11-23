@@ -1,0 +1,72 @@
+@model Booking
+@{
+    ViewData["Title"] = "Booking Confirmation";
+}
+
+<div class="text-center mb-4">
+    <div class="alert alert-success">
+        <i class="fas fa-check-circle fa-3x mb-3"></i>
+        <h2>Booking Confirmed!</h2>
+        <p>Your tickets have been booked successfully. Please find the details below.</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Booking Details</h4>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <p><strong>Booking ID:</strong> #@Model.BookingId</p>
+                        <p><strong>Event:</strong> @Model.Event?.EventName</p>
+                        <p><strong>Date:</strong> @Model.Event?.EventDate.ToString("MMMM dd, yyyy")</p>
+                        <p><strong>Time:</strong> @Model.Event?.EventTime.ToString(@"hh\:mm")</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Venue:</strong> @Model.Event?.Venue?.VenueName</p>
+                        <p><strong>Location:</strong> @Model.Event?.Venue?.City</p>
+                        <p><strong>Number of Tickets:</strong> @Model.NumberOfTickets</p>
+                        <p><strong>Total Amount:</strong> Rs. @Model.FinalAmount.ToString("N2")</p>
+                    </div>
+                </div>
+
+                <hr>
+
+                <h5 class="mb-3">Your Tickets</h5>
+                <div class="row">
+                    @foreach (var ticket in Model.Tickets)
+                    {
+                        <div class="col-md-6 mb-3">
+                            <div class="card border-primary">
+                                <div class="card-body">
+                                    <h6 class="card-title">Ticket #@ticket.TicketNumber</h6>
+                                    @if (!string.IsNullOrEmpty(ticket.QRCodeImagePath))
+                                    {
+                                        <img src="@ticket.QRCodeImagePath" alt="QR Code" class="img-fluid mb-2" style="max-width: 200px;" />
+                                    }
+                                    <p class="small text-muted">Show this QR code at the venue</p>
+                                    <a asp-action="DownloadTicket" asp-route-ticketId="@ticket.TicketId" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-download"></i> Download Ticket
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <div class="mt-4">
+                    <a asp-action="MyBookings" class="btn btn-primary">
+                        <i class="fas fa-list"></i> View All Bookings
+                    </a>
+                    <a asp-controller="Event" asp-action="Index" class="btn btn-outline-primary">
+                        <i class="fas fa-calendar"></i> Browse More Events
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

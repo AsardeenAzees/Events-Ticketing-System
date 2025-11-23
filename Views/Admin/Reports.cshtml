@@ -1,0 +1,147 @@
+@model AdminReportsViewModel
+@{
+    ViewData["Title"] = "System Reports";
+}
+
+<h2 class="mb-4"><i class="fas fa-chart-bar"></i> System Reports</h2>
+
+<ul class="nav nav-tabs mb-4" id="reportTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="sales-tab" data-bs-toggle="tab" data-bs-target="#sales" type="button" role="tab">
+            Sales Report
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="events-tab" data-bs-toggle="tab" data-bs-target="#events" type="button" role="tab">
+            Events Report
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="users-tab" data-bs-toggle="tab" data-bs-target="#users" type="button" role="tab">
+            Users Report
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content" id="reportTabsContent">
+    <div class="tab-pane fade show active" id="sales" role="tabpanel">
+        <div class="card shadow">
+            <div class="card-header">
+                <h5 class="mb-0">Sales Report</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <strong>Total Revenue:</strong> Rs. @Model.SalesReport.Sum(b => b.FinalAmount).ToString("N2")
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Booking ID</th>
+                                <th>Customer</th>
+                                <th>Event</th>
+                                <th>Date</th>
+                                <th>Tickets</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var booking in Model.SalesReport)
+                            {
+                                <tr>
+                                    <td>#@booking.BookingId</td>
+                                    <td>@booking.User?.FirstName @booking.User?.LastName</td>
+                                    <td>@booking.Event?.EventName</td>
+                                    <td>@booking.BookingDate.ToString("MMM dd, yyyy")</td>
+                                    <td>@booking.NumberOfTickets</td>
+                                    <td>Rs. @booking.FinalAmount.ToString("N2")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-pane fade" id="events" role="tabpanel">
+        <div class="card shadow">
+            <div class="card-header">
+                <h5 class="mb-0">Events Report</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Event Name</th>
+                                <th>Date</th>
+                                <th>Venue</th>
+                                <th>Category</th>
+                                <th>Price</th>
+                                <th>Available</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var eventItem in Model.EventsReport)
+                            {
+                                <tr>
+                                    <td>@eventItem.EventName</td>
+                                    <td>@eventItem.EventDate.ToString("MMM dd, yyyy")</td>
+                                    <td>@eventItem.Venue?.VenueName</td>
+                                    <td>@eventItem.Category</td>
+                                    <td>Rs. @eventItem.TicketPrice.ToString("N2")</td>
+                                    <td>@eventItem.AvailableTickets / @eventItem.TotalTickets</td>
+                                    <td>
+                                        <span class="badge bg-@(eventItem.IsActive ? "success" : "secondary")">
+                                            @(eventItem.IsActive ? "Active" : "Inactive")
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-pane fade" id="users" role="tabpanel">
+        <div class="card shadow">
+            <div class="card-header">
+                <h5 class="mb-0">Users Report</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>City</th>
+                                <th>Loyalty Points</th>
+                                <th>Joined</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var user in Model.UsersReport)
+                            {
+                                <tr>
+                                    <td>@user.FirstName @user.LastName</td>
+                                    <td>@user.Email</td>
+                                    <td><span class="badge bg-info">@user.Role</span></td>
+                                    <td>@user.City</td>
+                                    <td>@user.LoyaltyPoints</td>
+                                    <td>@user.CreatedAt.ToString("MMM dd, yyyy")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

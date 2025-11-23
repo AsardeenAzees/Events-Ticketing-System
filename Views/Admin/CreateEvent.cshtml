@@ -1,0 +1,123 @@
+@model Event
+@{
+    ViewData["Title"] = "Create Event";
+    var venues = ViewBag.Venues as List<Venue> ?? new List<Venue>();
+    var organizers = ViewBag.Organizers as List<ApplicationUser> ?? new List<ApplicationUser>();
+    var adminUsers = ViewBag.AdminUsers as List<ApplicationUser> ?? new List<ApplicationUser>();
+}
+
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0"><i class="fas fa-plus"></i> Create New Event</h3>
+            </div>
+            <div class="card-body">
+                <form asp-action="CreateEvent" method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    
+                    <div class="mb-3">
+                        <label asp-for="EventName" class="form-label"></label>
+                        <input asp-for="EventName" class="form-control" />
+                        <span asp-validation-for="EventName" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Description" class="form-label"></label>
+                        <textarea asp-for="Description" class="form-control" rows="5"></textarea>
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="EventDate" class="form-label">Event Date</label>
+                            <input asp-for="EventDate" type="date" class="form-control datepicker" data-min-date="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                            <span asp-validation-for="EventDate" class="text-danger"></span>
+                            <small class="text-muted"><i class="fas fa-calendar-alt"></i> Click to select date</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="EventTime" class="form-label">Event Time</label>
+                            <input asp-for="EventTime" type="time" class="form-control" />
+                            <span asp-validation-for="EventTime" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="VenueId" class="form-label"></label>
+                        <select asp-for="VenueId" class="form-select">
+                            <option value="">Select Venue</option>
+                            @foreach (var venue in venues)
+                            {
+                                <option value="@venue.VenueId">@venue.VenueName - @venue.City</option>
+                            }
+                        </select>
+                        <span asp-validation-for="VenueId" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="OrganizerId" class="form-label">Organizer</label>
+                        <select asp-for="OrganizerId" class="form-select">
+                            <option value="">Select Organizer (or leave empty to assign to yourself)</option>
+                            @{
+                                var currentAdmin = ViewContext.HttpContext.User.Identity?.Name;
+                                var adminUsers = ViewBag.AdminUsers as List<ApplicationUser> ?? new List<ApplicationUser>();
+                            }
+                            @foreach (var admin in adminUsers)
+                            {
+                                <option value="@admin.Id">@admin.FirstName @admin.LastName (Admin)</option>
+                            }
+                            @foreach (var organizer in organizers)
+                            {
+                                <option value="@organizer.Id">@organizer.FirstName @organizer.LastName (Organizer)</option>
+                            }
+                        </select>
+                        <span asp-validation-for="OrganizerId" class="text-danger"></span>
+                        <small class="text-muted">If left empty, the event will be assigned to you (Admin).</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Category" class="form-label"></label>
+                        <select asp-for="Category" class="form-select">
+                            <option value="">Select Category</option>
+                            <option value="Concert">Concert</option>
+                            <option value="Theatre">Theatre</option>
+                            <option value="Cultural">Cultural</option>
+                            <option value="Sports">Sports</option>
+                            <option value="Other">Other</option>
+                        </select>
+                        <span asp-validation-for="Category" class="text-danger"></span>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="TicketPrice" class="form-label"></label>
+                            <input asp-for="TicketPrice" type="number" step="0.01" class="form-control" />
+                            <span asp-validation-for="TicketPrice" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="TotalTickets" class="form-label"></label>
+                            <input asp-for="TotalTickets" type="number" class="form-control" />
+                            <span asp-validation-for="TotalTickets" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="ImageUrl" class="form-label"></label>
+                        <input asp-for="ImageUrl" type="url" class="form-control" placeholder="https://example.com/image.jpg" />
+                        <span asp-validation-for="ImageUrl" class="text-danger"></span>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">Create Event</button>
+                        <a asp-action="Events" class="btn btn-outline-secondary mt-2">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
+

@@ -1,0 +1,93 @@
+@{
+    ViewData["Title"] = "Book Tickets";
+    var eventModel = ViewBag.Event as Event;
+    var numberOfTickets = ViewBag.NumberOfTickets as int? ?? 1;
+    var totalAmount = ViewBag.TotalAmount as decimal? ?? 0;
+    var discountAmount = ViewBag.DiscountAmount as decimal? ?? 0;
+    var finalAmount = ViewBag.FinalAmount as decimal? ?? 0;
+    var loyaltyPoints = ViewBag.LoyaltyPoints as int? ?? 0;
+    var promotions = ViewBag.Promotions as List<Promotion> ?? new List<Promotion>();
+}
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-ticket-alt"></i> Booking Details</h4>
+            </div>
+            <div class="card-body">
+                <h5>@eventModel?.EventName</h5>
+                <p class="text-muted">
+                    <i class="fas fa-calendar"></i> @eventModel?.EventDate.ToString("MMMM dd, yyyy")<br>
+                    <i class="fas fa-clock"></i> @eventModel?.EventTime.ToString(@"hh\:mm")<br>
+                    <i class="fas fa-map-marker-alt"></i> @eventModel?.Venue?.VenueName, @eventModel?.Venue?.City
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">Payment Summary</h5>
+            </div>
+            <div class="card-body">
+                <form asp-action="Book" method="post">
+                    <input type="hidden" name="EventId" value="@eventModel?.EventId" />
+                    <input type="hidden" name="NumberOfTickets" value="@numberOfTickets" />
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Number of Tickets</label>
+                        <input type="number" class="form-control" value="@numberOfTickets" readonly />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Ticket Price (per ticket)</label>
+                        <input type="text" class="form-control" value="Rs. @eventModel?.TicketPrice.ToString("N2")" readonly />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Total Amount</label>
+                        <input type="text" class="form-control" value="Rs. @totalAmount.ToString("N2")" readonly />
+                    </div>
+
+                    @if (promotions.Any())
+                    {
+                        <div class="mb-3">
+                            <label class="form-label">Promotion Code (Optional)</label>
+                            <input type="text" name="PromotionCode" class="form-control" placeholder="Enter promo code" />
+                            <small class="text-muted">Available promotions: @string.Join(", ", promotions.Select(p => p.PromotionCode))</small>
+                        </div>
+                    }
+
+                    @if (loyaltyPoints > 0)
+                    {
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" name="UseLoyaltyPoints" class="form-check-input" id="useLoyaltyPoints" />
+                            <label class="form-check-label" for="useLoyaltyPoints">
+                                Use Loyalty Points (@loyaltyPoints points available)
+                            </label>
+                        </div>
+                    }
+
+                    <hr>
+                    <div class="mb-3">
+                        <label class="form-label">Discount Amount</label>
+                        <input type="text" class="form-control text-success" value="-Rs. @discountAmount.ToString("N2")" readonly />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Final Amount</label>
+                        <input type="text" class="form-control fw-bold text-primary" value="Rs. @finalAmount.ToString("N2")" readonly />
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="fas fa-credit-card"></i> Proceed to Payment
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+

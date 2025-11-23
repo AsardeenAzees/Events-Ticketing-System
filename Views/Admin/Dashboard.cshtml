@@ -1,0 +1,88 @@
+@model AdminDashboardViewModel
+@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<h2 class="mb-4"><i class="fas fa-tachometer-alt"></i> Admin Dashboard</h2>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <h5>Total Events</h5>
+                <h3>@Model.TotalEvents</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <h5>Total Users</h5>
+                <h3>@Model.TotalUsers</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <h5>Total Bookings</h5>
+                <h3>@Model.TotalBookings</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <h5>Total Revenue</h5>
+                <h3>Rs. @Model.TotalRevenue.ToString("N2")</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow">
+    <div class="card-header">
+        <h5 class="mb-0">Recent Bookings</h5>
+    </div>
+    <div class="card-body">
+        @if (Model.RecentBookings.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Booking ID</th>
+                            <th>Customer</th>
+                            <th>Event</th>
+                            <th>Date</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var booking in Model.RecentBookings)
+                        {
+                            <tr>
+                                <td>#@booking.BookingId</td>
+                                <td>@(booking.User != null ? $"{booking.User.FirstName} {booking.User.LastName}" : "N/A")</td>
+                                <td>@(booking.Event?.EventName ?? "N/A")</td>
+                                <td>@booking.BookingDate.ToString("MMM dd, yyyy")</td>
+                                <td>Rs. @booking.FinalAmount.ToString("N2")</td>
+                                <td>
+                                    <span class="badge bg-@(booking.PaymentStatus == "Completed" ? "success" : "warning")">
+                                        @(booking.PaymentStatus ?? "Pending")
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <p class="text-muted">No recent bookings.</p>
+        }
+    </div>
+</div>
+

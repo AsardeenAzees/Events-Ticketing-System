@@ -1,0 +1,96 @@
+@model List<Event>
+@{
+    ViewData["Title"] = "Events";
+}
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h2><i class="fas fa-calendar-alt"></i> Browse Events</h2>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form asp-action="Index" method="get" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Category</label>
+                <select name="category" class="form-select">
+                    <option value="">All Categories</option>
+                    @foreach (var cat in ViewBag.Categories as List<string> ?? new List<string>())
+                    {
+                        <option value="@cat" selected="@(ViewBag.SelectedCategory == cat)">@cat</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">City</label>
+                <select name="city" class="form-select">
+                    <option value="">All Cities</option>
+                    @foreach (var city in ViewBag.Cities as List<string> ?? new List<string>())
+                    {
+                        <option value="@city" selected="@(ViewBag.SelectedCity == city)">@city</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Date</label>
+                <input type="date" name="date" class="form-control" value="@(ViewBag.SelectedDate?.ToString("yyyy-MM-dd") ?? "")" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">&nbsp;</label>
+                <div>
+                    <button type="submit" class="btn btn-primary w-100">Search</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@if (Model != null && Model.Any())
+{
+    <div class="row">
+        @foreach (var eventItem in Model)
+        {
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow-sm">
+                    @if (!string.IsNullOrEmpty(eventItem.ImageUrl))
+                    {
+                        <img src="@eventItem.ImageUrl" class="card-img-top" alt="@eventItem.EventName" style="height: 200px; object-fit: cover;">
+                    }
+                    else
+                    {
+                        <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center" style="height: 200px;">
+                            <i class="fas fa-image fa-3x text-white"></i>
+                        </div>
+                    }
+                    <div class="card-body">
+                        <h5 class="card-title">@eventItem.EventName</h5>
+                        <p class="card-text">@(eventItem.Description.Length > 100 ? eventItem.Description.Substring(0, 100) + "..." : eventItem.Description)</p>
+                        <p class="text-muted small">
+                            <i class="fas fa-calendar"></i> @eventItem.EventDate.ToString("MMM dd, yyyy")<br>
+                            <i class="fas fa-clock"></i> @eventItem.EventTime.ToString(@"hh\:mm")<br>
+                            <i class="fas fa-map-marker-alt"></i> @eventItem.Venue?.VenueName, @eventItem.Venue?.City<br>
+                            <i class="fas fa-tag"></i> @eventItem.Category
+                        </p>
+                        <p class="text-primary fw-bold">Rs. @eventItem.TicketPrice.ToString("N2")</p>
+                        <p class="text-success">
+                            <i class="fas fa-ticket-alt"></i> @eventItem.AvailableTickets tickets available
+                        </p>
+                    </div>
+                    <div class="card-footer">
+                        <a asp-action="Details" asp-route-id="@eventItem.EventId" class="btn btn-primary">
+                            View Details
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i> No events found matching your search criteria.
+    </div>
+}
+

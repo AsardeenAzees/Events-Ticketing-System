@@ -1,0 +1,57 @@
+@model Ticket
+@{
+    ViewData["Title"] = "Download Ticket";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow" id="ticketCard">
+            <div class="card-header bg-primary text-white text-center">
+                <h3 class="mb-0">@Model.Booking?.Event?.EventName</h3>
+            </div>
+            <div class="card-body text-center">
+                <h5>Ticket #@Model.TicketNumber</h5>
+                <hr>
+                <p><strong>Event Date:</strong> @Model.Booking?.Event?.EventDate.ToString("MMMM dd, yyyy")</p>
+                <p><strong>Event Time:</strong> @Model.Booking?.Event?.EventTime.ToString(@"hh\:mm")</p>
+                <p><strong>Venue:</strong> @Model.Booking?.Event?.Venue?.VenueName</p>
+                <p><strong>Location:</strong> @Model.Booking?.Event?.Venue?.City</p>
+                <hr>
+                @if (!string.IsNullOrEmpty(Model.QRCodeImagePath))
+                {
+                    <img src="@Model.QRCodeImagePath" alt="QR Code" class="img-fluid mb-3" style="max-width: 300px;" />
+                    <p class="text-muted small">Present this QR code at the venue for entry</p>
+                }
+                <hr>
+                <p class="small text-muted">Booking ID: #@Model.BookingId</p>
+                <p class="small text-muted">Issued on: @Model.CreatedAt.ToString("MMMM dd, yyyy HH:mm")</p>
+            </div>
+        </div>
+        <div class="text-center mt-3">
+            <button onclick="window.print()" class="btn btn-primary">
+                <i class="fas fa-print"></i> Print Ticket
+            </button>
+            <a asp-action="MyBookings" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Bookings
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    @@media print {
+        body * {
+            visibility: hidden;
+        }
+        #ticketCard, #ticketCard * {
+            visibility: visible;
+        }
+        #ticketCard {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+        }
+    }
+</style>
+

@@ -1,0 +1,84 @@
+@model Event
+@{
+    ViewData["Title"] = Model.EventName;
+}
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card shadow">
+            @if (!string.IsNullOrEmpty(Model.ImageUrl))
+            {
+                <img src="@Model.ImageUrl" class="card-img-top" alt="@Model.EventName" style="max-height: 400px; object-fit: cover;">
+            }
+            <div class="card-body">
+                <h2 class="card-title">@Model.EventName</h2>
+                <p class="text-muted">
+                    <i class="fas fa-tag"></i> @Model.Category
+                </p>
+                <hr>
+                <p class="card-text">@Model.Description</p>
+                <hr>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong><i class="fas fa-calendar"></i> Date:</strong> @Model.EventDate.ToString("MMMM dd, yyyy")</p>
+                        <p><strong><i class="fas fa-clock"></i> Time:</strong> @Model.EventTime.ToString(@"hh\:mm")</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong><i class="fas fa-map-marker-alt"></i> Venue:</strong> @Model.Venue?.VenueName</p>
+                        <p><strong><i class="fas fa-location-arrow"></i> Location:</strong> @Model.Venue?.Address, @Model.Venue?.City</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow sticky-top" style="top: 20px;">
+            <div class="card-body">
+                <h4 class="card-title">Ticket Information</h4>
+                <p class="text-primary fs-4 fw-bold">Rs. @Model.TicketPrice.ToString("N2")</p>
+                <p class="text-success">
+                    <i class="fas fa-ticket-alt"></i> @Model.AvailableTickets tickets available
+                </p>
+                @if (Model.AvailableTickets > 0)
+                {
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        @* Only show Book Tickets for Customers *@
+                        @if (!User.IsInRole("Admin") && !User.IsInRole("Organizer"))
+                        {
+                            <form asp-controller="Booking" asp-action="Book" method="get">
+                                <input type="hidden" name="eventId" value="@Model.EventId" />
+                                <div class="mb-3">
+                                    <label class="form-label">Number of Tickets</label>
+                                    <input type="number" name="numberOfTickets" class="form-control" min="1" max="@Model.AvailableTickets" value="1" />
+                                </div>
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fas fa-shopping-cart"></i> Book Tickets
+                                </button>
+                            </form>
+                        }
+                        else
+                        {
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle"></i> Admin and Organizer accounts cannot book tickets.
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <a asp-controller="Account" asp-action="Login" class="btn btn-primary w-100">
+                            <i class="fas fa-sign-in-alt"></i> Login to Book
+                        </a>
+                    }
+                }
+                else
+                {
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i> Sold Out
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
