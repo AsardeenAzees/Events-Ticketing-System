@@ -32,7 +32,10 @@
                         <td>@user.City</td>
                         <td>@user.LoyaltyPoints</td>
                         <td>
-                            @if (user.LockoutEnabled && user.LockoutEnd > DateTimeOffset.UtcNow)
+                            @{
+                                var isUserLocked = user.LockoutEnabled && user.LockoutEnd.HasValue && user.LockoutEnd > DateTimeOffset.UtcNow;
+                            }
+                            @if (isUserLocked)
                             {
                                 <span class="badge bg-danger">Locked</span>
                             }
@@ -42,9 +45,9 @@
                             }
                         </td>
                         <td>
-                            <form asp-action="ToggleUserStatus" asp-route-userId="@user.Id" method="post" class="d-inline">
-                                <button type="submit" class="btn btn-sm btn-@(user.LockoutEnabled ? "success" : "warning")">
-                                    <i class="fas fa-@(user.LockoutEnabled ? "unlock" : "lock")"></i> @(user.LockoutEnabled ? "Unlock" : "Lock")
+                            <form asp-action="ToggleUserStatus" asp-route-userId="@user.Id" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to @(isUserLocked ? "unlock" : "lock") @(user.FirstName + " " + user.LastName)?');">
+                                <button type="submit" class="btn btn-sm btn-@(isUserLocked ? "success" : "warning")">
+                                    <i class="fas fa-@(isUserLocked ? "unlock" : "lock")"></i> @(isUserLocked ? "Unlock" : "Lock")
                                 </button>
                             </form>
                         </td>

@@ -148,12 +148,40 @@ namespace StarEventsTicketing.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteVenue(int id)
         {
-            var venue = await _context.Venues.FindAsync(id);
-            if (venue != null)
+            try
             {
+                var venue = await _context.Venues
+                    .Include(v => v.Events)
+                    .FirstOrDefaultAsync(v => v.VenueId == id);
+
+                if (venue == null)
+                {
+                    TempData["ErrorMessage"] = "Venue not found.";
+                    return RedirectToAction(nameof(Venues));
+                }
+
+                // Check if venue has associated events
+                var hasEvents = await _context.Events.AnyAsync(e => e.VenueId == id);
+                if (hasEvents)
+                {
+                    TempData["ErrorMessage"] = $"Cannot delete venue '{venue.VenueName}' because it has associated events. Please delete or reassign the events first.";
+                    return RedirectToAction(nameof(Venues));
+                }
+
+                // Safe to delete - no associated events
                 _context.Venues.Remove(venue);
                 await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = $"Venue '{venue.VenueName}' deleted successfully.";
             }
+            catch (DbUpdateException ex)
+            {
+                TempData["ErrorMessage"] = "An error occurred while deleting the venue. It may have associated events or bookings.";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = "An unexpected error occurred while deleting the venue.";
+            }
+
             return RedirectToAction(nameof(Venues));
         }
 
@@ -325,12 +353,40 @@ namespace StarEventsTicketing.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteEvent(int id)
         {
-            var eventModel = await _context.Events.FindAsync(id);
-            if (eventModel != null)
+            try
             {
+                var eventModel = await _context.Events
+                    .Include(e => e.Bookings)
+                    .FirstOrDefaultAsync(e => e.EventId == id);
+
+                if (eventModel == null)
+                {
+                    TempData["ErrorMessage"] = "Event not found.";
+                    return RedirectToAction(nameof(Events));
+                }
+
+                // Check if event has associated bookings
+                var hasBookings = await _context.Bookings.AnyAsync(b => b.EventId == id);
+                if (hasBookings)
+                {
+                    TempData["ErrorMessage"] = $"Cannot delete event '{eventModel.EventName}' because it has associated bookings. Please delete or cancel the bookings first.";
+                    return RedirectToAction(nameof(Events));
+                }
+
+                // Safe to delete - no associated bookings
                 _context.Events.Remove(eventModel);
                 await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = $"Event '{eventModel.EventName}' deleted successfully.";
             }
+            catch (DbUpdateException ex)
+            {
+                TempData["ErrorMessage"] = "An error occurred while deleting the event. It may have associated bookings.";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = "An unexpected error occurred while deleting the event.";
+            }
+
             return RedirectToAction(nameof(Events));
         }
 
@@ -387,6 +443,118 @@ namespace StarEventsTicketing.Controllers
             };
 
             return View(model);
+        }
+
+        // Export Sales Report as Excel (CSV)
+        public async Task<IActionResult> ExportSalesExcel()
+        {
+            var salesReport = await _context.Bookings
+                .Include(b => b.Event)
+                .Include(b => b.User)
+                .Where(b => b.PaymentStatus == "Completed")
+                .OrderByDescending(b => b.BookingDate)
+                .ToListAsync();
+
+            var csv = new System.Text.StringBuilder();
+            csv.AppendLine("Booking ID,Customer Name,Email,Event Name,Booking Date,Tickets,Total Amount,Discount Amount,Final Amount");
+
+            foreach (var booking in salesReport)
+            {
+                var customerName = $"{booking.User?.FirstName} {booking.User?.LastName}";
+                csv.AppendLine($"{booking.BookingId},\"{customerName}\",\"{booking.User?.Email}\",\"{booking.Event?.EventName}\",\"{booking.BookingDate:yyyy-MM-dd}\",{booking.NumberOfTickets},{booking.TotalAmount},{booking.DiscountAmount},{booking.FinalAmount}");
+            }
+
+            var totalRevenue = salesReport.Sum(b => b.FinalAmount);
+            csv.AppendLine();
+            csv.AppendLine($"Total Revenue,{totalRevenue}");
+
+            var fileName = $"Sales_Report_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+            return File(System.Text.Encoding.UTF8.GetBytes(csv.ToString()), "text/csv", fileName);
+        }
+
+        // Export Sales Report as PDF
+        public async Task<IActionResult> ExportSalesPdf()
+        {
+            var salesReport = await _context.Bookings
+                .Include(b => b.Event)
+                .Include(b => b.User)
+                .Where(b => b.PaymentStatus == "Completed")
+                .OrderByDescending(b => b.BookingDate)
+                .ToListAsync();
+
+            var totalRevenue = salesReport.Sum(b => b.FinalAmount);
+            ViewBag.TotalRevenue = totalRevenue;
+            ViewBag.ReportType = "Sales Report";
+            ViewBag.GeneratedDate = DateTime.Now.ToString("MMMM dd, yyyy HH:mm");
+
+            return View("ExportReport", salesReport);
+        }
+
+        // Export Events Report as Excel (CSV)
+        public async Task<IActionResult> ExportEventsExcel()
+        {
+            var eventsReport = await _context.Events
+                .Include(e => e.Venue)
+                .Include(e => e.Organizer)
+                .ToListAsync();
+
+            var csv = new System.Text.StringBuilder();
+            csv.AppendLine("Event Name,Event Date,Event Time,Venue,Category,Ticket Price,Total Tickets,Available Tickets,Status,Organizer");
+
+            foreach (var eventItem in eventsReport)
+            {
+                var organizerName = $"{eventItem.Organizer?.FirstName} {eventItem.Organizer?.LastName}";
+                var status = eventItem.IsActive ? "Active" : "Inactive";
+                csv.AppendLine($"\"{eventItem.EventName}\",\"{eventItem.EventDate:yyyy-MM-dd}\",\"{eventItem.EventTime}\",\"{eventItem.Venue?.VenueName}\",\"{eventItem.Category}\",{eventItem.TicketPrice},{eventItem.TotalTickets},{eventItem.AvailableTickets},\"{status}\",\"{organizerName}\"");
+            }
+
+            var fileName = $"Events_Report_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+            return File(System.Text.Encoding.UTF8.GetBytes(csv.ToString()), "text/csv", fileName);
+        }
+
+        // Export Events Report as PDF
+        public async Task<IActionResult> ExportEventsPdf()
+        {
+            var eventsReport = await _context.Events
+                .Include(e => e.Venue)
+                .Include(e => e.Organizer)
+                .ToListAsync();
+
+            ViewBag.ReportType = "Events Report";
+            ViewBag.GeneratedDate = DateTime.Now.ToString("MMMM dd, yyyy HH:mm");
+
+            return View("ExportEventsReport", eventsReport);
+        }
+
+        // Export Users Report as Excel (CSV)
+        public async Task<IActionResult> ExportUsersExcel()
+        {
+            var usersReport = await _context.Users.ToListAsync();
+
+            var csv = new System.Text.StringBuilder();
+            csv.AppendLine("Name,Email,Role,Phone,City,Loyalty Points,Joined Date,Status");
+
+            foreach (var user in usersReport)
+            {
+                var fullName = $"{user.FirstName} {user.LastName}";
+                var isLocked = user.LockoutEnabled && user.LockoutEnd.HasValue && user.LockoutEnd > DateTimeOffset.UtcNow;
+                var status = isLocked ? "Locked" : "Active";
+                csv.AppendLine($"\"{fullName}\",\"{user.Email}\",\"{user.Role}\",\"{user.PhoneNumber ?? ""}\",\"{user.City ?? ""}\",{user.LoyaltyPoints},\"{user.CreatedAt:yyyy-MM-dd}\",\"{status}\"");
+            }
+
+            var fileName = $"Users_Report_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+            return File(System.Text.Encoding.UTF8.GetBytes(csv.ToString()), "text/csv", fileName);
+        }
+
+        // Export Users Report as PDF
+        public async Task<IActionResult> ExportUsersPdf()
+        {
+            var usersReport = await _context.Users.ToListAsync();
+
+            ViewBag.ReportType = "Users Report";
+            ViewBag.GeneratedDate = DateTime.Now.ToString("MMMM dd, yyyy HH:mm");
+
+            return View("ExportUsersReport", usersReport);
         }
 
         private bool VenueExists(int id)
